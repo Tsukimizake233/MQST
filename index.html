@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+  <form id="test-form">
+    <label for="pass2">pass2:</label>
+    <input type="text" id="pass2" name="name" required>
+    <br>
+    <label for="menberA">一人目:</label>
+    <input type="text" id="menberA" name="menberA" required>
+    <br>
+    <label for="menberA">二人目:</label>
+    <input type="text" id="menberB" name="menberB" required>
+    <br>
+    <label for="menberA">三人目:</label>
+    <input type="text" id="menberC" name="menberC" required>
+    <br>
+    <label for="menberA">四人目:</label>
+    <input type="text" id="menberD" name="menberD" required>
+    <br>
+    <br>
+    <button type="button" id="test-submit">送信</button>
+  </form>
+<script>
+// test-script.js
+document.getElementById('test-submit').addEventListener('click', function() {
+
+  const form = document.getElementById('test-form');
+  const formData = new FormData(form);
+
+  // 1行分のデータを作る
+  const row = {};
+  formData.forEach((value, key) => {
+    row[key] = value;
+  });
+
+  // 最終的に送りたい JSON
+  const data = {
+    action: "replace",
+    sheetName: "test",
+    rows: [row]
+  };
+
+  fetch('https://script.google.com/macros/s/AKfycbxQbP57Q2eBenW-UppNCE3V2kZcOqBiKDD5nKsFfiKV1QflFKGKueJsESL1yyaoK7Hajw/exec', {
+    method: 'POST',
+    body: JSON.stringify(data)
+  })
+  .then(res => res.json())
+  .then(result => {
+    console.log('成功:', result);
+  })
+  .catch(error => {
+    console.error('エラー:', error);
+  });
+});</script>
+</body>
+
