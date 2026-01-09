@@ -45,6 +45,7 @@ document.getElementById('test-submit').addEventListener('click', function() {
   };
 
   fetch('https://script.google.com/macros/s/AKfycby2QlAOITvHs7qaVOM-l42XhSCndwTCk2QpujNyP3xhUU6yvsSjrsEko_KFf5mTzwMUPQ/exec', {
+  method: 'POST',
   body: JSON.stringify(data)
 })
 .then(res => res.json())
@@ -52,6 +53,7 @@ document.getElementById('test-submit').addEventListener('click', function() {
 .catch(console.error);
 });</script>
 </body>
+
 
 
 
