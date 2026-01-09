@@ -45,14 +45,22 @@ document.getElementById('test-submit').addEventListener('click', function() {
   };
 
 fetch('https://script.google.com/macros/s/AKfycbzcWPYJb-CzdnFJJCq7DCQmrikHPdtactiuZ_5Zh5A4YmAdQSLHravebc5agLAHTEx1lw/exec', {
-  method: 'POST',
-  headers: {
+    method: 'POST',
+  　headers: {
     'Content-Type': 'text/plain', // 'application/json'から変更
   },
-  body: JSON.stringify(data),
-});
+    body: JSON.stringify(data)
+  })
+  .then(res => res.json())
+  .then(result => {
+    console.log('成功:', result);
+  })
+  .catch(error => {
+    console.error('エラー:', error);
+  });
 });</script>
 </body>
+
 
 
 
