@@ -44,14 +44,25 @@ document.getElementById('test-submit').addEventListener('click', function() {
     rows: [row]
   };
   
-fetch('https://script.google.com/macros/s/AKfycbzMbbAB7yJpPo-mdDIcih6R1cCJBLbWrdTvTjixKGkkYf122taeue0Jq-d7BO8Mrtygwg/exec', {
-         method     : POST,
-         mode       : no-cors,
-         Content-Type : application/x-www-form-urlencoded,
-         body : JSON.stringify(data)
+var URL = "https://script.google.com/macros/s/AKfycbzMbbAB7yJpPo-mdDIcih6R1cCJBLbWrdTvTjixKGkkYf122taeue0Jq-d7BO8Mrtygwg/exec";
+
+var SendDATA = {
+    "action": "replace",
+    "sheetName": "test",
+    "rows": [row]
+  };
+ var postparam = 
+       {
+         "method"     : "POST",
+         "mode"       : "no-cors",
+         "Content-Type" : "application/x-www-form-urlencoded",
+         "body" : JSON.stringify(SendDATA)
        };
+
+ fetch(URL, postparam);
 });</script>
 </body>
+
 
 
 
