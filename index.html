@@ -22,7 +22,7 @@
     <input type="text" id="menberD" name="menberD" required>
     <br>
     <br>
-    <button type="button" id="test-submit">送信</button>
+    <button type="button" id="test-submit">上書き保存</button>
   </form>
 <script>
 // test-script.js
@@ -61,7 +61,89 @@ var SendDATA = {
 
  fetch(URL, postparam);
 });</script>
+      <br>
+    <button type="button" id="test-submit">新規保存</button>
+  </form>
+<script>
+// test-script.js
+document.getElementById('test-submit').addEventListener('click', function() {
+
+  const form = document.getElementById('test-form');
+  const formData = new FormData(form);
+
+  // 1行分のデータを作る
+  const row = {};
+  formData.forEach((value, key) => {
+    row[key] = value;
+  });
+
+  // 最終的に送りたい JSON
+  const data = {
+    action: "replace",
+    sheetName: "test",
+    rows: [row]
+  };
+  
+var URL = "https://script.google.com/macros/s/AKfycbwEiDQk11hbSr6VKdrQyuEAjcKwQHh_KhsL4gNSGXUk5YxkCbqMp5dxWz3ZE0XQx7qG7Q/exec";
+
+var SendDATA = {
+    "action": "insert",
+    "sheetName": "test",
+    "rows": [row]
+  };
+ var postparam = 
+       {
+         "method"     : "POST",
+         "mode"       : "no-cors",
+         "Content-Type" : "application/x-www-form-urlencoded",
+         "body" : JSON.stringify(SendDATA)
+       };
+
+ fetch(URL, postparam);
+});</script>
+
+      <br>
+    <button type="button" id="test-submit">削除</button>
+  </form>
+<script>
+// test-script.js
+document.getElementById('test-submit').addEventListener('click', function() {
+
+  const form = document.getElementById('test-form');
+  const formData = new FormData(form);
+
+  // 1行分のデータを作る
+  const row = {};
+  formData.forEach((value, key) => {
+    row[key] = value;
+  });
+
+  // 最終的に送りたい JSON
+  const data = {
+    action: "replace",
+    sheetName: "test",
+    rows: [row]
+  };
+  
+var URL = "https://script.google.com/macros/s/AKfycbwEiDQk11hbSr6VKdrQyuEAjcKwQHh_KhsL4gNSGXUk5YxkCbqMp5dxWz3ZE0XQx7qG7Q/exec";
+
+var SendDATA = {
+    "action": "delete",
+    "sheetName": "test",
+    "rows": [row]
+  };
+ var postparam = 
+       {
+         "method"     : "POST",
+         "mode"       : "no-cors",
+         "Content-Type" : "application/x-www-form-urlencoded",
+         "body" : JSON.stringify(SendDATA)
+       };
+
+ fetch(URL, postparam);
+});</script>
 </body>
+
 
 
 
