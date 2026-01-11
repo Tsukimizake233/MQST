@@ -56,11 +56,11 @@ var SendDATA = {
 });</script>
 
   <br>
-    <button type="button" id="test-submit">新規保存</button>
+    <button type="button" id="insert-submit">新規保存</button>
   </form>
 <script>
 // test-script.js
-document.getElementById('test-submit').addEventListener('click', function() {
+document.getElementById('insert-submit').addEventListener('click', function() {
 
   const form = document.getElementById('test-form');
   const formData = new FormData(form);
@@ -90,11 +90,11 @@ var SendDATA = {
 });</script>
 
   <br>
-    <button type="button" id="test-submit">削除</button>
+    <button type="button" id="delete-submit">削除</button>
   </form>
 <script>
 // test-script.js
-document.getElementById('test-submit').addEventListener('click', function() {
+document.getElementById('delete-submit').addEventListener('click', function() {
 
   const form = document.getElementById('test-form');
   const formData = new FormData(form);
@@ -123,6 +123,7 @@ var SendDATA = {
  fetch(URL, postparam);
 });</script>
 </body>
+
 
 
 
