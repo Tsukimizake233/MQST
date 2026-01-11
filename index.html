@@ -36,15 +36,8 @@ document.getElementById('test-submit').addEventListener('click', function() {
   formData.forEach((value, key) => {
     row[key] = value;
   });
-
-  // 最終的に送りたい JSON
-  const data = {
-    action: "replace",
-    sheetName: "test",
-    rows: [row]
-  };
   
-var URL = "https://script.google.com/macros/s/AKfycbzvoqJ9V9zCuwfZN62PywUGuh9YdI0HcPGK27mV_Z31xizLD33PzqpmefCBbaPblT8nWQ";
+var URL = "https://script.google.com/macros/s/AKfycbzvoqJ9V9zCuwfZN62PywUGuh9YdI0HcPGK27mV_Z31xizLD33PzqpmefCBbaPblT8nWQ/exec";
 
 var SendDATA = {
     "action": "replace",
@@ -77,14 +70,9 @@ document.getElementById('insert-submit').addEventListener('click', function() {
     row[key] = value;
   });
 
-  // 最終的に送りたい JSON
-  const data = {
-    action: "insert",
-    sheetName: "test",
-    rows: [row]
   };
   
-var URL = "https://script.google.com/macros/s/AKfycbzvoqJ9V9zCuwfZN62PywUGuh9YdI0HcPGK27mV_Z31xizLD33PzqpmefCBbaPblT8nWQ";
+var URL = "https://script.google.com/macros/s/AKfycbzvoqJ9V9zCuwfZN62PywUGuh9YdI0HcPGK27mV_Z31xizLD33PzqpmefCBbaPblT8nWQ/exec";
 
 var SendDATA = {
     "action": "insert",
@@ -117,15 +105,8 @@ document.getElementById('delete-submit').addEventListener('click', function() {
   formData.forEach((value, key) => {
     row[key] = value;
   });
-
-  // 最終的に送りたい JSON
-  const data = {
-    action: "delete",
-    sheetName: "test",
-    rows: [row]
-  };
   
-var URL = "https://script.google.com/macros/s/AKfycbzvoqJ9V9zCuwfZN62PywUGuh9YdI0HcPGK27mV_Z31xizLD33PzqpmefCBbaPblT8nWQ";
+var URL = "https://script.google.com/macros/s/AKfycbzvoqJ9V9zCuwfZN62PywUGuh9YdI0HcPGK27mV_Z31xizLD33PzqpmefCBbaPblT8nWQ/exec";
 
 var SendDATA = {
     "action": "delete",
@@ -143,6 +124,7 @@ var SendDATA = {
  fetch(URL, postparam);
 });</script>
 </body>
+
 
 
 
