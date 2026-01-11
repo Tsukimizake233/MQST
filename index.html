@@ -79,7 +79,7 @@ document.getElementById('test-submit').addEventListener('click', function() {
 
   // 最終的に送りたい JSON
   const data = {
-    action: "replace",
+    action: "insert",
     sheetName: "test",
     rows: [row]
   };
@@ -120,7 +120,7 @@ document.getElementById('test-submit').addEventListener('click', function() {
 
   // 最終的に送りたい JSON
   const data = {
-    action: "replace",
+    action: "delete",
     sheetName: "test",
     rows: [row]
   };
@@ -143,6 +143,7 @@ var SendDATA = {
  fetch(URL, postparam);
 });</script>
 </body>
+
 
 
 
