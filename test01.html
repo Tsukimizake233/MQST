@@ -88,15 +88,29 @@
             font-weight: 600;
             cursor: pointer;
             transition: transform 0.2s, box-shadow 0.2s;
+            margin-bottom: 10px;
         }
         
-        .btn:hover {
+        .btn:hover:not(:disabled) {
             transform: translateY(-2px);
             box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
         }
         
-        .btn:active {
+        .btn:active:not(:disabled) {
             transform: translateY(0);
+        }
+        
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .btn-secondary {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+        }
+        
+        .btn-secondary:hover:not(:disabled) {
+            box-shadow: 0 5px 15px rgba(67, 233, 123, 0.4);
         }
         
         .messages {
@@ -161,6 +175,24 @@
             border-left: 4px solid #c33;
         }
         
+        .success {
+            background: #d4edda;
+            color: #155724;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border-left: 4px solid #28a745;
+        }
+        
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border-left: 4px solid #17a2b8;
+        }
+        
         .status {
             background: #e3f2fd;
             padding: 10px 15px;
@@ -175,9 +207,28 @@
         }
         
         .loading {
-            text-align: center;
-            color: #666;
-            padding: 20px;
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s linear infinite;
+            margin-left: 10px;
+            vertical-align: middle;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .button-group .btn {
+            margin-bottom: 0;
         }
     </style>
 </head>
@@ -191,12 +242,12 @@
         <!-- ログイン画面 -->
         <div class="login-container" id="loginContainer">
             <div class="form-group">
-                <label for="roomNumber">部屋番号</label>
-                <input type="text" id="roomNumber" placeholder="例: room123">
+                <label for="roomID">部屋番号</label>
+                <input type="text" id="roomID" placeholder="例: room123">
             </div>
             <div id="loginError"></div>
-            <button class="btn" onclick="enterRoom()">入室する</button>
-            <button class="btn" onclick="createAndEnterRoom()" style="margin-top: 10px; background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">新しい部屋を作成</button>
+            <button class="btn btn-secondary" id="createBtn" onclick="createRoom()">新規作成</button>
+            <button class="btn" id="enterBtn" onclick="enterRoom()">入室(観戦はこちらから)</button>
         </div>
         
         <!-- チャット画面 -->
@@ -205,52 +256,103 @@
             <div class="messages" id="messages">
                 <div class="empty-state">メッセージはまだありません</div>
             </div>
-            <div class="loading hidden" id="loading">読み込み中...</div>
         </div>
     </div>
 
     <script>
         // ここにGASのWebアプリURLを設定してください
-        const API_URL = 'AKfycbxIINhUl-I4v0T9RP-JzwjntSx6Rlc_irXFZq7e-OOP_AKLKajuCdW9bhOBBL4n0o6gNg';
+        const API_URL = 'AKfycbyJ8thXe1OAdLk1SIlGnxYPGfd-JYBrMJqPFCFq9dkCiu-b4ZNmby_Ydru6M4gqXk9bCg';
         
         let currentRoom = null;
         let pollingInterval = null;
-        let allMessages = []; // 取得した全メッセージを保持
+        let allMessages = [];
         
         // URLパラメータから部屋番号を取得
         window.addEventListener('DOMContentLoaded', () => {
             const params = new URLSearchParams(window.location.search);
             const roomFromUrl = params.get('room');
             if (roomFromUrl) {
-                document.getElementById('roomNumber').value = roomFromUrl;
+                document.getElementById('roomID').value = roomFromUrl;
             }
         });
         
+        // 部屋作成
+        async function createRoom() {
+            const roomID = document.getElementById('roomID').value.trim();
+            const createBtn = document.getElementById('createBtn');
+            const enterBtn = document.getElementById('enterBtn');
+            
+            if (!roomID) {
+                showError('loginError', '部屋番号を入力してください');
+                return;
+            }
+            
+            // ボタン無効化
+            createBtn.disabled = true;
+            enterBtn.disabled = true;
+            createBtn.innerHTML = '作成中...<span class="loading"></span>';
+            
+            try {
+                // 部屋作成リクエスト
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain' },
+                    body: JSON.stringify({
+                        action: 'createRoom',
+                        roomID: roomID
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (!data.success) {
+                    showError('loginError', `エラー: ${data.error || 'この番号は使用中です。'}`);
+                    createBtn.disabled = false;
+                    enterBtn.disabled = false;
+                    createBtn.textContent = '新規作成';
+                    return;
+                }
+                
+                // 作成成功
+                showSuccess('loginError', '部屋を作成しました。5秒後に入室します...');
+                
+                // 5秒待って入室
+                await sleep(5000);
+                await enterRoom();
+                
+            } catch (error) {
+                showError('loginError', 'エラーが発生しました: ' + error.message);
+                createBtn.disabled = false;
+                enterBtn.disabled = false;
+                createBtn.textContent = '新規作成';
+            }
+        }
+        
         // 入室処理
         async function enterRoom() {
-            const roomNumber = document.getElementById('roomNumber').value.trim();
+            const roomID = document.getElementById('roomID').value.trim();
             
-            if (!roomNumber) {
+            if (!roomID) {
                 showError('loginError', '部屋番号を入力してください');
                 return;
             }
             
             try {
                 // 部屋の状態を確認
-                const response = await fetch(`${API_URL}?action=getRoomStatus&roomNumber=${roomNumber}`);
+                const response = await fetch(`${API_URL}?action=getRoomStatus&roomID=${roomID}`);
                 const data = await response.json();
                 
-                if (!data.createdAt) {
+                if (!data.exists) {
                     showError('loginError', 'この部屋は存在しません');
                     return;
                 }
                 
-                currentRoom = roomNumber;
+                currentRoom = roomID;
                 
                 // 画面切り替え
                 document.getElementById('loginContainer').classList.add('hidden');
                 document.getElementById('chatContainer').classList.remove('hidden');
-                document.getElementById('roomInfo').textContent = `部屋番号: ${roomNumber}`;
+                document.getElementById('roomInfo').textContent = `部屋番号: ${roomID}`;
                 
                 // ステータス表示
                 showStatus(data);
@@ -266,49 +368,12 @@
             }
         }
         
-        // 部屋作成して入室
-        async function createAndEnterRoom() {
-            const roomNumber = document.getElementById('roomNumber').value.trim();
-            
-            if (!roomNumber) {
-                showError('loginError', '部屋番号を入力してください');
-                return;
-            }
-            
-            try {
-                // 部屋を作成
-                const response = await fetch(API_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        action: 'createRoom',
-                        roomNumber: roomNumber
-                    })
-                });
-                
-                const data = await response.json();
-                
-                if (!data.success) {
-                    showError('loginError', data.error || '部屋の作成に失敗しました');
-                    return;
-                }
-                
-                // 作成成功したら入室
-                await enterRoom();
-                
-            } catch (error) {
-                showError('loginError', 'エラーが発生しました: ' + error.message);
-            }
-        }
-        
         // メッセージ取得
         async function loadMessages() {
             if (!currentRoom) return;
             
             try {
-                const response = await fetch(`${API_URL}?action=getMessages&roomNumber=${currentRoom}`);
+                const response = await fetch(`${API_URL}?action=getMessages&roomID=${currentRoom}`);
                 const data = await response.json();
                 
                 // 新しいメッセージをマージ
@@ -325,11 +390,10 @@
         // メッセージをマージ(重複を避けて追加)
         function mergeMessages(newMessages) {
             newMessages.forEach(newMsg => {
-                // タイムスタンプとユーザーIDとメッセージ内容で重複チェック
                 const exists = allMessages.some(msg => 
                     msg.timestamp === newMsg.timestamp && 
-                    msg.userId === newMsg.userId &&
-                    msg.message === newMsg.message
+                    msg.user_name === newMsg.user_name &&
+                    msg.txt === newMsg.txt
                 );
                 
                 if (!exists) {
@@ -360,10 +424,10 @@
                 return `
                     <div class="message">
                         <div class="message-header">
-                            <span class="message-user">${escapeHtml(msg.userId)}</span>
+                            <span class="message-user">${escapeHtml(msg.user_name)}</span>
                             <span>${timeStr}</span>
                         </div>
-                        <div class="message-content">${escapeHtml(msg.message)}</div>
+                        <div class="message-content">${escapeHtml(msg.txt)}</div>
                     </div>
                 `;
             }).join('');
@@ -393,6 +457,17 @@
             setTimeout(() => {
                 errorDiv.innerHTML = '';
             }, 5000);
+        }
+        
+        // 成功メッセージ表示
+        function showSuccess(elementId, message) {
+            const div = document.getElementById(elementId);
+            div.innerHTML = `<div class="success">${escapeHtml(message)}</div>`;
+        }
+        
+        // スリープ関数
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
         }
         
         // HTMLエスケープ
