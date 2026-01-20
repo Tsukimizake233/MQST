@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>メッセージ送信</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            width: 100%;
+            max-width: 500px;
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 25px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+        
+        .header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        
+        .form-container {
+            padding: 30px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+        }
+        
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            font-family: inherit;
+            transition: border-color 0.3s;
+        }
+        
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #f5576c;
+        }
+        
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+        
+        .char-count {
+            text-align: right;
+            font-size: 12px;
+            color: #999;
+            margin-top: 5px;
+        }
+        
+        .btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(245, 87, 108, 0.4);
+        }
+        
+        .btn:active:not(:disabled) {
+            transform: translateY(0);
+        }
+        
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .success {
+            background: #d4edda;
+            color: #155724;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border-left: 4px solid #28a745;
+            animation: slideDown 0.3s ease;
+        }
+        
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border-left: 4px solid #dc3545;
+            animation: slideDown 0.3s ease;
+        }
+        
+        .warning {
+            background: #fff3cd;
+            color: #856404;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border-left: 4px solid #ffc107;
+        }
+        
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .info-box {
+            background: #e7f3ff;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            color: #004085;
+        }
+        
+        .info-box strong {
+            display: block;
+            margin-bottom: 5px;
+        }
+        
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s linear infinite;
+            margin-left: 10px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📤 メッセージ送信</h1>
+            <p>チャットルームにメッセージを送る</p>
+        </div>
+        
+        <div class="form-container">
+            <div id="messageArea"></div>
+            
+            <div class="info-box">
+                <strong>注意事項:</strong>
+                各部屋には先着2人までしかメッセージを送信できません。
+            </div>
+            
+            <div class="form-group">
+                <label for="roomNumber">部屋番号 *</label>
+                <input type="text" id="roomNumber" placeholder="例: room123" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="userId">ユーザーID *</label>
+                <input type="text" id="userId" placeholder="例: user_001" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="message">メッセージ *</label>
+                <textarea id="message" placeholder="メッセージを入力してください" maxlength="500" required></textarea>
+                <div class="char-count"><span id="charCount">0</span>/500</div>
+            </div>
+            
+            <button class="btn" id="sendBtn" onclick="sendMessage()">送信する</button>
+        </div>
+    </div>
+
+    <script>
+        // ここにGASのWebアプリURLを設定してください
+        const API_URL = 'AKfycbx_NwnsbMTAnxZDYs4gIFjkkBYd6jujAVy8KTc0l7fqpkukyntEZNV4FS6w574E3PMisg';
+        
+        // 文字数カウント
+        const messageInput = document.getElementById('message');
+        const charCount = document.getElementById('charCount');
+        
+        messageInput.addEventListener('input', () => {
+            charCount.textContent = messageInput.value.length;
+        });
+        
+        // URLパラメータから値を取得
+        window.addEventListener('DOMContentLoaded', () => {
+            const params = new URLSearchParams(window.location.search);
+            const roomFromUrl = params.get('room');
+            const userFromUrl = params.get('user');
+            
+            if (roomFromUrl) {
+                document.getElementById('roomNumber').value = roomFromUrl;
+            }
+            if (userFromUrl) {
+                document.getElementById('userId').value = userFromUrl;
+            }
+            
+            // localStorageから前回の値を復元(ブラウザ内のみ)
+            const savedUser = localStorage.getItem('lastUserId');
+            if (savedUser && !userFromUrl) {
+                document.getElementById('userId').value = savedUser;
+            }
+        });
+        
+        // メッセージ送信
+        async function sendMessage() {
+            const roomNumber = document.getElementById('roomNumber').value.trim();
+            const userId = document.getElementById('userId').value.trim();
+            const message = document.getElementById('message').value.trim();
+            const messageArea = document.getElementById('messageArea');
+            const sendBtn = document.getElementById('sendBtn');
+            
+            // バリデーション
+            if (!roomNumber || !userId || !message) {
+                showMessage('error', 'すべての項目を入力してください');
+                return;
+            }
+            
+            // ボタン無効化
+            sendBtn.disabled = true;
+            sendBtn.innerHTML = '送信中...<span class="loading"></span>';
+            
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: 'sendMessage',
+                        roomNumber: roomNumber,
+                        userId: userId,
+                        message: message
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showMessage('success', 'メッセージを送信しました!');
+                    
+                    // メッセージ欄をクリア
+                    document.getElementById('message').value = '';
+                    charCount.textContent = '0';
+                    
+                    // ユーザーIDを保存
+                    localStorage.setItem('lastUserId', userId);
+                    
+                } else {
+                    showMessage('error', data.error || '送信に失敗しました');
+                }
+                
+            } catch (error) {
+                showMessage('error', 'エラーが発生しました: ' + error.message);
+            } finally {
+                // ボタン再有効化
+                sendBtn.disabled = false;
+                sendBtn.textContent = '送信する';
+            }
+        }
+        
+        // メッセージ表示
+        function showMessage(type, text) {
+            const messageArea = document.getElementById('messageArea');
+            messageArea.innerHTML = `<div class="${type}">${escapeHtml(text)}</div>`;
+            
+            // 5秒後に自動削除
+            setTimeout(() => {
+                messageArea.innerHTML = '';
+            }, 5000);
+        }
+        
+        // HTMLエスケープ
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        // Enterキーで送信
+        messageInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+                sendMessage();
+            }
+        });
+    </script>
+</body>
+</html>
