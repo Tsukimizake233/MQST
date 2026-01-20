@@ -414,23 +414,47 @@
                 return;
             }
             
-            messagesDiv.innerHTML = messages.map(msg => {
-                const date = new Date(msg.timestamp);
-                const timeStr = date.toLocaleTimeString('ja-JP', { 
-                    hour: '2-digit', 
-                    minute: '2-digit' 
-                });
+            // 空の状態メッセージを削除
+            const emptyState = messagesDiv.querySelector('.empty-state');
+            if (emptyState) {
+                emptyState.remove();
+            }
+            
+            // 既存のメッセージのタイムスタンプを取得
+            const existingTimestamps = new Set();
+            messagesDiv.querySelectorAll('.message').forEach(msgEl => {
+                const timestamp = msgEl.dataset.timestamp;
+                if (timestamp) {
+                    existingTimestamps.add(timestamp);
+                }
+            });
+            
+            // 新しいメッセージのみを追加
+            messages.forEach(msg => {
+                const timestampKey = `${msg.timestamp}_${msg.user_name}`;
                 
-                return `
-                    <div class="message">
+                if (!existingTimestamps.has(timestampKey)) {
+                    const date = new Date(msg.timestamp);
+                    const timeStr = date.toLocaleTimeString('ja-JP', { 
+                        hour: '2-digit', 
+                        minute: '2-digit' 
+                    });
+                    
+                    const messageEl = document.createElement('div');
+                    messageEl.className = 'message';
+                    messageEl.dataset.timestamp = timestampKey;
+                    messageEl.innerHTML = `
                         <div class="message-header">
                             <span class="message-user">${escapeHtml(msg.user_name)}</span>
                             <span>${timeStr}</span>
                         </div>
                         <div class="message-content">${escapeHtml(msg.txt)}</div>
-                    </div>
-                `;
-            }).join('');
+                    `;
+                    
+                    messagesDiv.appendChild(messageEl);
+                    existingTimestamps.add(timestampKey);
+                }
+            });
             
             // 最新メッセージまでスクロール
             messagesDiv.scrollTop = messagesDiv.scrollHeight;
