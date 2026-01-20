@@ -118,6 +118,15 @@
             cursor: not-allowed;
         }
         
+        .btn-danger {
+            background: linear-gradient(135deg, #ff6b6b 0%, #c92a2a 100%);
+            margin-top: 10px;
+        }
+        
+        .btn-danger:hover:not(:disabled) {
+            box-shadow: 0 5px 15px rgba(255, 107, 107, 0.4);
+        }
+        
         .success {
             background: #d4edda;
             color: #155724;
@@ -227,12 +236,13 @@
             </div>
             
             <button class="btn" id="sendBtn" onclick="sendMessage()">送信する</button>
+            <button class="btn btn-danger" id="leaveBtn" onclick="leaveRoom()">この部屋から退出する</button>
         </div>
     </div>
 
     <script>
         // ここにGASのWebアプリURLを設定してください
-        const API_URL = 'https://script.google.com/macros/s/AKfycbyJ8thXe1OAdLk1SIlGnxYPGfd-JYBrMJqPFCFq9dkCiu-b4ZNmby_Ydru6M4gqXk9bCg/exec';
+        const API_URL = 'https://script.google.com/macros/s/AKfycbyQ2dLNw5R-V9HDmQm6XboMpokmZDIlzifotVFPLX7TfLsF1_jngUafRb74BYNlT3wXww/exec';
         
         // 文字数カウント
         const txtInput = document.getElementById('txt');
@@ -389,6 +399,58 @@
             });
             
             return await response.json();
+        }
+        
+        // 部屋から退出
+        async function leaveRoom() {
+            const roomID = document.getElementById('roomID').value.trim();
+            const user_pass = document.getElementById('user_pass').value.trim();
+            const leaveBtn = document.getElementById('leaveBtn');
+            const sendBtn = document.getElementById('sendBtn');
+            
+            if (!roomID || !user_pass) {
+                showMessage('error', '部屋番号とパスワードを入力してください');
+                return;
+            }
+            
+            if (!confirm('本当にこの部屋から退出しますか?')) {
+                return;
+            }
+            
+            leaveBtn.disabled = true;
+            sendBtn.disabled = true;
+            leaveBtn.innerHTML = '退出中...<span class="loading"></span>';
+            
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain' },
+                    body: JSON.stringify({
+                        action: 'leaveRoom',
+                        roomID,
+                        user_pass
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showMessage('success', '部屋から退出しました');
+                    // フォームをクリア
+                    document.getElementById('user_pass').value = '';
+                    document.getElementById('txt').value = '';
+                    charCount.textContent = '0';
+                } else {
+                    showMessage('error', data.error || '退出に失敗しました');
+                }
+                
+            } catch (error) {
+                showMessage('error', 'エラーが発生しました: ' + error.message);
+            } finally {
+                leaveBtn.disabled = false;
+                sendBtn.disabled = false;
+                leaveBtn.textContent = 'この部屋から退出する';
+            }
         }
         
         // スリープ関数
