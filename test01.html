@@ -152,6 +152,18 @@
             animation: slideIn 0.3s ease;
         }
         
+        .message.system-message {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            text-align: center;
+            font-style: italic;
+            color: #856404;
+        }
+        
+        .message.system-message .message-content {
+            color: #856404;
+        }
+        
         @keyframes slideIn {
             from {
                 opacity: 0;
@@ -285,7 +297,7 @@
 
     <script>
         // ここにGASのWebアプリURLを設定してください
-        const API_URL = 'https://script.google.com/macros/s/AKfycbxBifPRBeDbBNgf3YkLR5uGalq8puEDxaubTdihw6PNS7Yz7pPFkUh1n4Q3l-2XS8cQNw/exec';
+        const API_URL = 'YOUR_GAS_WEB_APP_URL_HERE';
         
         let currentRoom = null;
         let pollingInterval = null;
@@ -473,15 +485,24 @@
                     });
                     
                     const messageEl = document.createElement('div');
-                    messageEl.className = 'message';
                     messageEl.dataset.timestamp = timestampKey;
-                    messageEl.innerHTML = `
-                        <div class="message-header">
-                            <span class="message-user">${escapeHtml(msg.user_name)}</span>
-                            <span>${timeStr}</span>
-                        </div>
-                        <div class="message-content">${escapeHtml(msg.txt)}</div>
-                    `;
+                    
+                    // システムメッセージかどうか判定
+                    if (msg.user_name === 'システム') {
+                        messageEl.className = 'message system-message';
+                        messageEl.innerHTML = `
+                            <div class="message-content">${escapeHtml(msg.txt)}</div>
+                        `;
+                    } else {
+                        messageEl.className = 'message';
+                        messageEl.innerHTML = `
+                            <div class="message-header">
+                                <span class="message-user">${escapeHtml(msg.user_name)}</span>
+                                <span>${timeStr}</span>
+                            </div>
+                            <div class="message-content">${escapeHtml(msg.txt)}</div>
+                        `;
+                    }
                     
                     messagesDiv.appendChild(messageEl);
                     existingTimestamps.add(timestampKey);
