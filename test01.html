@@ -261,7 +261,7 @@
 
     <script>
         // ここにGASのWebアプリURLを設定してください
-        const API_URL = 'https://script.google.com/macros/s/AKfycbyJ8thXe1OAdLk1SIlGnxYPGfd-JYBrMJqPFCFq9dkCiu-b4ZNmby_Ydru6M4gqXk9bCg/exec';
+        const API_URL = 'YOUR_GAS_WEB_APP_URL_HERE';
         
         let currentRoom = null;
         let pollingInterval = null;
@@ -420,6 +420,9 @@
                 emptyState.remove();
             }
             
+            // スクロール位置を保存(一番下にいるかチェック)
+            const isScrolledToBottom = messagesDiv.scrollHeight - messagesDiv.scrollTop <= messagesDiv.clientHeight + 50;
+            
             // 既存のメッセージのタイムスタンプを取得
             const existingTimestamps = new Set();
             messagesDiv.querySelectorAll('.message').forEach(msgEl => {
@@ -428,6 +431,8 @@
                     existingTimestamps.add(timestamp);
                 }
             });
+            
+            let hasNewMessage = false;
             
             // 新しいメッセージのみを追加
             messages.forEach(msg => {
@@ -453,11 +458,14 @@
                     
                     messagesDiv.appendChild(messageEl);
                     existingTimestamps.add(timestampKey);
+                    hasNewMessage = true;
                 }
             });
             
-            // 最新メッセージまでスクロール
-            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+            // 新しいメッセージがあり、かつ元々一番下にスクロールしていた場合のみ自動スクロール
+            if (hasNewMessage && isScrolledToBottom) {
+                messagesDiv.scrollTop = messagesDiv.scrollHeight;
+            }
         }
         
         // ステータス表示
