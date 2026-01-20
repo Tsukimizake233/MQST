@@ -138,13 +138,14 @@
             animation: slideDown 0.3s ease;
         }
         
-        .warning {
-            background: #fff3cd;
-            color: #856404;
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
             padding: 12px;
             border-radius: 8px;
             margin-bottom: 15px;
-            border-left: 4px solid #ffc107;
+            border-left: 4px solid #17a2b8;
+            animation: slideDown 0.3s ease;
         }
         
         @keyframes slideDown {
@@ -174,13 +175,14 @@
         
         .loading {
             display: inline-block;
-            width: 20px;
-            height: 20px;
+            width: 16px;
+            height: 16px;
             border: 3px solid rgba(255,255,255,0.3);
             border-radius: 50%;
             border-top-color: white;
             animation: spin 1s linear infinite;
             margin-left: 10px;
+            vertical-align: middle;
         }
         
         @keyframes spin {
@@ -204,18 +206,23 @@
             </div>
             
             <div class="form-group">
-                <label for="roomNumber">部屋番号 *</label>
-                <input type="text" id="roomNumber" placeholder="例: room123" required>
+                <label for="roomID">部屋番号 *</label>
+                <input type="text" id="roomID" placeholder="例: room123" required>
             </div>
             
             <div class="form-group">
-                <label for="userId">ユーザーID *</label>
-                <input type="text" id="userId" placeholder="例: user_001" required>
+                <label for="user_name">ユーザー名 *</label>
+                <input type="text" id="user_name" placeholder="例: たなか" required>
             </div>
             
             <div class="form-group">
-                <label for="message">メッセージ *</label>
-                <textarea id="message" placeholder="メッセージを入力してください" maxlength="500" required></textarea>
+                <label for="user_pass">パスワード * (半角英数・大文字小文字)</label>
+                <input type="password" id="user_pass" placeholder="例: Password123" required pattern="[a-zA-Z0-9]+">
+            </div>
+            
+            <div class="form-group">
+                <label for="txt">メッセージ *</label>
+                <textarea id="txt" placeholder="メッセージを入力してください" maxlength="500" required></textarea>
                 <div class="char-count"><span id="charCount">0</span>/500</div>
             </div>
             
@@ -225,14 +232,14 @@
 
     <script>
         // ここにGASのWebアプリURLを設定してください
-        const API_URL = 'AKfycbxIINhUl-I4v0T9RP-JzwjntSx6Rlc_irXFZq7e-OOP_AKLKajuCdW9bhOBBL4n0o6gNg';
+        const API_URL = 'AKfycbyJ8thXe1OAdLk1SIlGnxYPGfd-JYBrMJqPFCFq9dkCiu-b4ZNmby_Ydru6M4gqXk9bCg';
         
         // 文字数カウント
-        const messageInput = document.getElementById('message');
+        const txtInput = document.getElementById('txt');
         const charCount = document.getElementById('charCount');
         
-        messageInput.addEventListener('input', () => {
-            charCount.textContent = messageInput.value.length;
+        txtInput.addEventListener('input', () => {
+            charCount.textContent = txtInput.value.length;
         });
         
         // URLパラメータから値を取得
@@ -242,74 +249,151 @@
             const userFromUrl = params.get('user');
             
             if (roomFromUrl) {
-                document.getElementById('roomNumber').value = roomFromUrl;
+                document.getElementById('roomID').value = roomFromUrl;
             }
             if (userFromUrl) {
-                document.getElementById('userId').value = userFromUrl;
-            }
-            
-            // localStorageから前回の値を復元(ブラウザ内のみ)
-            const savedUser = localStorage.getItem('lastUserId');
-            if (savedUser && !userFromUrl) {
-                document.getElementById('userId').value = savedUser;
+                document.getElementById('user_name').value = userFromUrl;
             }
         });
         
         // メッセージ送信
         async function sendMessage() {
-            const roomNumber = document.getElementById('roomNumber').value.trim();
-            const userId = document.getElementById('userId').value.trim();
-            const message = document.getElementById('message').value.trim();
+            const roomID = document.getElementById('roomID').value.trim();
+            const user_name = document.getElementById('user_name').value.trim();
+            const user_pass = document.getElementById('user_pass').value.trim();
+            const txt = document.getElementById('txt').value.trim();
             const messageArea = document.getElementById('messageArea');
             const sendBtn = document.getElementById('sendBtn');
             
             // バリデーション
-            if (!roomNumber || !userId || !message) {
+            if (!roomID || !user_name || !user_pass || !txt) {
                 showMessage('error', 'すべての項目を入力してください');
+                return;
+            }
+            
+            // パスワード形式チェック
+            if (!/^[a-zA-Z0-9]+$/.test(user_pass)) {
+                showMessage('error', 'パスワードは半角英数字(大文字・小文字)のみ使用できます');
                 return;
             }
             
             // ボタン無効化
             sendBtn.disabled = true;
-            sendBtn.innerHTML = '送信中...<span class="loading"></span>';
+            sendBtn.innerHTML = '確認中...<span class="loading"></span>';
             
             try {
-                const response = await fetch(API_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        action: 'sendMessage',
-                        roomNumber: roomNumber,
-                        userId: userId,
-                        message: message
-                    })
-                });
+                // 1. 部屋の存在確認
+                const roomStatus = await checkRoomExists(roomID);
                 
-                const data = await response.json();
+                if (!roomStatus.exists) {
+                    showMessage('error', '部屋が存在しません');
+                    sendBtn.disabled = false;
+                    sendBtn.textContent = '送信する';
+                    return;
+                }
                 
-                if (data.success) {
+                // 2. 空きがあるか確認
+                if (roomStatus.hasSlot) {
+                    // 空きがある場合: ユーザー登録を試みる
+                    sendBtn.innerHTML = '入室中...<span class="loading"></span>';
+                    showMessage('info', '入室中...');
+                    
+                    const registered = await registerAndWait(roomID, user_name, user_pass);
+                    
+                    if (!registered) {
+                        showMessage('error', 'エラー(もう一度お試しください。)');
+                        sendBtn.disabled = false;
+                        sendBtn.textContent = '送信する';
+                        return;
+                    }
+                    
+                    showMessage('success', `${roomID}に入室しました`);
+                }
+                
+                // 3. メッセージ送信
+                sendBtn.innerHTML = '送信中...<span class="loading"></span>';
+                
+                const result = await sendMessageToRoom(roomID, user_name, user_pass, txt);
+                
+                if (result.success) {
                     showMessage('success', 'メッセージを送信しました!');
-                    
-                    // メッセージ欄をクリア
-                    document.getElementById('message').value = '';
+                    document.getElementById('txt').value = '';
                     charCount.textContent = '0';
-                    
-                    // ユーザーIDを保存
-                    localStorage.setItem('lastUserId', userId);
-                    
                 } else {
-                    showMessage('error', data.error || '送信に失敗しました');
+                    showMessage('error', result.error || '送信に失敗しました');
                 }
                 
             } catch (error) {
                 showMessage('error', 'エラーが発生しました: ' + error.message);
             } finally {
-                // ボタン再有効化
                 sendBtn.disabled = false;
                 sendBtn.textContent = '送信する';
             }
+        }
+        
+        // 部屋の存在確認
+        async function checkRoomExists(roomID) {
+            const response = await fetch(`${API_URL}?action=getRoomStatus&roomID=${roomID}`);
+            return await response.json();
+        }
+        
+        // ユーザー登録して待機
+        async function registerAndWait(roomID, user_name, user_pass) {
+            // ユーザー登録リクエスト
+            const registerResponse = await fetch(API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain' },
+                body: JSON.stringify({
+                    action: 'registerUser',
+                    roomID,
+                    user_name,
+                    user_pass
+                })
+            });
+            
+            const registerResult = await registerResponse.json();
+            
+            if (!registerResult.success) {
+                return false;
+            }
+            
+            // 5秒待って確認
+            await sleep(5000);
+            let checkResponse = await fetch(`${API_URL}?action=checkUserRegistration&roomID=${roomID}&user_pass=${user_pass}`);
+            let checkResult = await checkResponse.json();
+            
+            if (checkResult.registered) {
+                return true;
+            }
+            
+            // さらに5秒待って再確認
+            await sleep(5000);
+            checkResponse = await fetch(`${API_URL}?action=checkUserRegistration&roomID=${roomID}&user_pass=${user_pass}`);
+            checkResult = await checkResponse.json();
+            
+            return checkResult.registered;
+        }
+        
+        // メッセージ送信
+        async function sendMessageToRoom(roomID, user_name, user_pass, txt) {
+            const response = await fetch(API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain' },
+                body: JSON.stringify({
+                    action: 'sendMessage',
+                    roomID,
+                    user_name,
+                    user_pass,
+                    txt
+                })
+            });
+            
+            return await response.json();
+        }
+        
+        // スリープ関数
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
         }
         
         // メッセージ表示
@@ -317,10 +401,11 @@
             const messageArea = document.getElementById('messageArea');
             messageArea.innerHTML = `<div class="${type}">${escapeHtml(text)}</div>`;
             
-            // 5秒後に自動削除
-            setTimeout(() => {
-                messageArea.innerHTML = '';
-            }, 5000);
+            if (type !== 'info') {
+                setTimeout(() => {
+                    messageArea.innerHTML = '';
+                }, 5000);
+            }
         }
         
         // HTMLエスケープ
@@ -330,8 +415,8 @@
             return div.innerHTML;
         }
         
-        // Enterキーで送信
-        messageInput.addEventListener('keydown', (e) => {
+        // Ctrl+Enterで送信
+        txtInput.addEventListener('keydown', (e) => {
             if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
                 sendMessage();
             }
