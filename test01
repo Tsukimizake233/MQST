@@ -240,6 +240,11 @@
                 const response = await fetch(`${API_URL}?action=getRoomStatus&roomNumber=${roomNumber}`);
                 const data = await response.json();
                 
+                if (!data.createdAt) {
+                    showError('loginError', 'この部屋は存在しません');
+                    return;
+                }
+                
                 currentRoom = roomNumber;
                 
                 // 画面切り替え
@@ -255,6 +260,43 @@
                 
                 // 3秒ごとに自動更新
                 pollingInterval = setInterval(loadMessages, 3000);
+                
+            } catch (error) {
+                showError('loginError', 'エラーが発生しました: ' + error.message);
+            }
+        }
+        
+        // 部屋作成して入室
+        async function createAndEnterRoom() {
+            const roomNumber = document.getElementById('roomNumber').value.trim();
+            
+            if (!roomNumber) {
+                showError('loginError', '部屋番号を入力してください');
+                return;
+            }
+            
+            try {
+                // 部屋を作成
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: 'createRoom',
+                        roomNumber: roomNumber
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (!data.success) {
+                    showError('loginError', data.error || '部屋の作成に失敗しました');
+                    return;
+                }
+                
+                // 作成成功したら入室
+                await enterRoom();
                 
             } catch (error) {
                 showError('loginError', 'エラーが発生しました: ' + error.message);
