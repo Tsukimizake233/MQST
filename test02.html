@@ -242,7 +242,7 @@
 
     <script>
         // ここにGASのWebアプリURLを設定してください
-        const API_URL = 'https://script.google.com/macros/s/AKfycbxBifPRBeDbBNgf3YkLR5uGalq8puEDxaubTdihw6PNS7Yz7pPFkUh1n4Q3l-2XS8cQNw/exec';
+        const API_URL = 'https://script.google.com/macros/s/AKfycbwI0KngDW3oIXGwtQtUYb4BGGF_v2ZvykGMjEFHljsvENNoVNb_BVgQob0GQAFoOzRxfA/exec';
         
         // 文字数カウント
         const txtInput = document.getElementById('txt');
@@ -404,12 +404,13 @@
         // 部屋から退出
         async function leaveRoom() {
             const roomID = document.getElementById('roomID').value.trim();
+            const user_name = document.getElementById('user_name').value.trim();
             const user_pass = document.getElementById('user_pass').value.trim();
             const leaveBtn = document.getElementById('leaveBtn');
             const sendBtn = document.getElementById('sendBtn');
             
-            if (!roomID || !user_pass) {
-                showMessage('error', '部屋番号とパスワードを入力してください');
+            if (!roomID || !user_name || !user_pass) {
+                showMessage('error', 'すべての項目を入力してください');
                 return;
             }
             
@@ -428,6 +429,7 @@
                     body: JSON.stringify({
                         action: 'leaveRoom',
                         roomID,
+                        user_name,
                         user_pass
                     })
                 });
@@ -437,6 +439,7 @@
                 if (data.success) {
                     showMessage('success', '部屋から退出しました');
                     // フォームをクリア
+                    document.getElementById('user_name').value = '';
                     document.getElementById('user_pass').value = '';
                     document.getElementById('txt').value = '';
                     charCount.textContent = '0';
