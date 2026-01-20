@@ -46,6 +46,27 @@
             font-size: 14px;
             opacity: 0.9;
             margin-top: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .room-number {
+            cursor: pointer;
+            user-select: none;
+            padding: 5px 10px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 5px;
+            transition: background 0.3s;
+        }
+        
+        .room-number:hover {
+            background: rgba(255,255,255,0.3);
+        }
+        
+        .room-number.hidden-mode {
+            letter-spacing: 2px;
         }
         
         .login-container, .chat-container {
@@ -236,7 +257,10 @@
     <div class="container">
         <div class="header">
             <h1>🏠 個室チャット</h1>
-            <div class="room-info" id="roomInfo"></div>
+            <div class="room-info" id="roomInfo">
+                <span>部屋番号: </span>
+                <span class="room-number" id="roomNumber" onclick="toggleRoomNumber()" title="クリックで表示/非表示"></span>
+            </div>
         </div>
         
         <!-- ログイン画面 -->
@@ -261,11 +285,12 @@
 
     <script>
         // ここにGASのWebアプリURLを設定してください
-        const API_URL = 'https://script.google.com/macros/s/AKfycbyJ8thXe1OAdLk1SIlGnxYPGfd-JYBrMJqPFCFq9dkCiu-b4ZNmby_Ydru6M4gqXk9bCg/exec';
+        const API_URL = 'https://script.google.com/macros/s/AKfycbyQ2dLNw5R-V9HDmQm6XboMpokmZDIlzifotVFPLX7TfLsF1_jngUafRb74BYNlT3wXww/exec';
         
         let currentRoom = null;
         let pollingInterval = null;
         let allMessages = [];
+        let roomNumberVisible = false; // 部屋番号の表示状態
         
         // URLパラメータから部屋番号を取得
         window.addEventListener('DOMContentLoaded', () => {
@@ -352,7 +377,9 @@
                 // 画面切り替え
                 document.getElementById('loginContainer').classList.add('hidden');
                 document.getElementById('chatContainer').classList.remove('hidden');
-                document.getElementById('roomInfo').textContent = `部屋番号: ${roomID}`;
+                
+                // 部屋番号を設定(初期状態は非表示)
+                updateRoomNumberDisplay(roomID);
                 
                 // ステータス表示
                 showStatus(data);
@@ -500,6 +527,29 @@
         // スリープ関数
         function sleep(ms) {
             return new Promise(resolve => setTimeout(resolve, ms));
+        }
+        
+        // 部屋番号の表示/非表示を切り替え
+        function toggleRoomNumber() {
+            roomNumberVisible = !roomNumberVisible;
+            updateRoomNumberDisplay(currentRoom);
+        }
+        
+        // 部屋番号の表示を更新
+        function updateRoomNumberDisplay(roomID) {
+            const roomNumberEl = document.getElementById('roomNumber');
+            const roomInfoEl = document.getElementById('roomInfo');
+            
+            if (roomNumberVisible) {
+                roomNumberEl.textContent = roomID;
+                roomNumberEl.classList.remove('hidden-mode');
+            } else {
+                roomNumberEl.textContent = '●●●●●●';
+                roomNumberEl.classList.add('hidden-mode');
+            }
+            
+            // 部屋情報を表示
+            roomInfoEl.style.display = 'flex';
         }
         
         // HTMLエスケープ
